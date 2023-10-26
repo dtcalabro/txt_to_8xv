@@ -10,7 +10,7 @@ bool archived = true;
 
 int index_of_file_extension(char *filename) {
     int index = -1;
-    for (int i = 0; i < strlen(filename); i++) {
+    for (int i = 0; i < (int)strlen(filename); i++) {
         if (filename[i] == '.') {
             index = i;
         }
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    char *filename = argv[optind];
+    char *txt_filepath = argv[optind];
 
     // Parse any remaining arguments
     for (int i = optind + 1; i < argc; i++) {
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     }
 
     // Find the last occurrence of the '/' character in the file path
-    char *txt_filename = strrchr(argv[1], '/');
+    char *txt_filename = strrchr(txt_filepath, '/');
     if (txt_filename == NULL) {
         // The file path does not contain any '/' characters
         txt_filename = argv[1];
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    FILE *txt_fp = fopen(argv[1], "rb");
+    FILE *txt_fp = fopen(txt_filepath, "rb");
     if (txt_fp == NULL) {
         printf("Error: could not open file '%s' for reading\n", txt_filename);
         return 1;
@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
 
     // signature offset 0x0 (0) thru 0xa (10)
     unsigned char sig[] = {0x2a, 0x2a, 0x54, 0x49, 0x38, 0x33, 0x46, 0x2a, 0x1a, 0x0a, 0x00};
-    for (int i = 0; i < sizeof(sig); i++) {
+    for (unsigned long i = 0; i < sizeof(sig); i++) {
         fputc(sig[i], fp);
     }
 
@@ -197,14 +197,14 @@ int main(int argc, char **argv) {
     if (var_name != NULL) {
         fprintf(fp, "%.*s", 8, var_name);
         if (strlen(var_name) < 8) {
-            for (int i = 0; i < 8 - strlen(var_name); i++) {
+            for (unsigned long i = 0; i < 8 - strlen(var_name); i++) {
                 fputc(0x00, fp);
             }
         }
     } else {
         fprintf(fp, "%.*s", 8, trimmed_filename);
         if (strlen(trimmed_filename) < 8) {
-            for (int i = 0; i < 8 - strlen(trimmed_filename); i++) {
+            for (unsigned long i = 0; i < 8 - strlen(trimmed_filename); i++) {
                 fputc(0x00, fp);
             }
         }
@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
     
     // MATEO offset 0x4a (74) thru 0x4e (78)
     unsigned char before_filename[] = {0x4d, 0x41, 0x54, 0x45, 0x4f};
-    for (int i = 0; i < sizeof(before_filename); i++) {
+    for (unsigned long i = 0; i < sizeof(before_filename); i++) {
         fputc(before_filename[i], fp);
     }
 
@@ -244,14 +244,14 @@ int main(int argc, char **argv) {
     if (note_name != NULL) {
         fprintf(fp, "%.*s", 20, note_name);
         if (strlen(note_name) < 20) {
-            for (int i = 0; i < 20 - strlen(note_name); i++) {
+            for (unsigned long i = 0; i < 20 - strlen(note_name); i++) {
                 fputc(0x0D, fp);
             }
         }
     } else {
         fprintf(fp, "%.*s", 20, txt_filename);
         if (strlen(txt_filename) < 20) {
-            for (int i = 0; i < 20 - strlen(txt_filename); i++) {
+            for (unsigned long i = 0; i < 20 - strlen(txt_filename); i++) {
                 fputc(0x0D, fp);
             }
         }
