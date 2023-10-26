@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 
-char *var_name = NULL;
-char *note_name = NULL;
+char *var_name = "";
+char *note_name = "";
 bool archived = true;
 
 int index_of_file_extension(char *filename) {
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
     fputc(0x15, fp);
 
     // variable name offset 0x3c (60) thru 0x43 (67) padded with 0x00
-    if (var_name != NULL) {
+    if (var_name != "") {
         fprintf(fp, "%.*s", 8, var_name);
         if (strlen(var_name) < 8) {
             for (int i = 0; i < 8 - strlen(var_name); i++) {
@@ -234,14 +234,14 @@ int main(int argc, char **argv) {
         fputc(before_filename[i], fp);
     }
 
-    if (strlen(txt_filename) > 19 && note_name == NULL) {
+    if (strlen(txt_filename) > 19 && note_name == "") {
         printf("Error: The filename given is too long to be stored as the name for the note. Only the first 19 characters will be used instead!\n");
-    } else if (strlen(note_name) > 19 && note_name != NULL) {
+    } else if (strlen(note_name) > 19 && note_name != "") {
         printf("Error: The note name given is too long to be stored so only the first 19 characters will be used instead!\n");
     }
 
     // filename offset 0x4f (79) thru 0x62 (98) padded with 0x0D
-    if (note_name != NULL) {
+    if (note_name != "") {
         fprintf(fp, "%.*s", 20, note_name);
         if (strlen(note_name) < 20) {
             for (int i = 0; i < 20 - strlen(note_name); i++) {
