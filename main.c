@@ -50,25 +50,26 @@ void print_help(char *program_name) {
 }
 
 int main(int argc, char **argv) {
+    // Parse the command line arguments
     int opt;
     while ((opt = getopt(argc, argv, "n:v:arh")) != -1) {
         switch (opt) {
-            case 'n':
+            case 'n': // if -n is given, save the note name
                 note_name = optarg;
                 break;
-            case 'v':
+            case 'v': // if -v is given, save the variable name
                 var_name = optarg;
                 break;
-            case 'a':
+            case 'a': // if -a is given, set archived to true
                 archived = true;
                 break;
-            case 'r':
+            case 'r': // if -r is given, set archived to false
                 archived = false;
                 break;
-            case 'h':
+            case 'h': // if -h is given, print help menu
                 print_help(argv[0]);
                 exit(EXIT_SUCCESS);
-            default:
+            default: // if an unknown option is given, print help menu
                 fprintf(stderr, "Unknown option: %c\n", optopt);
                 print_help(argv[0]);
                 exit(EXIT_FAILURE);
@@ -84,20 +85,20 @@ int main(int argc, char **argv) {
 
     // Parse any remaining arguments
     for (int i = optind + 1; i < argc; i++) {
-        if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) {
+        if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) { // if -n is given, save the note name
             note_name = argv[i + 1];
             i++;
-        } else if (strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
+        } else if (strcmp(argv[i], "-v") == 0 && i + 1 < argc) { // if -v is given, save the variable name
             var_name = argv[i + 1];
             i++;
-        } else if (strcmp(argv[i], "-a") == 0) {
+        } else if (strcmp(argv[i], "-a") == 0) { // if -a is given, set archived to true
             archived = true;
-        } else if (strcmp(argv[i], "-r") == 0) {
+        } else if (strcmp(argv[i], "-r") == 0) { // if -r is given, set archived to false
             archived = false;
-        } else if (strcmp(argv[i], "-h") == 0) {
+        } else if (strcmp(argv[i], "-h") == 0) { // if -h is given, print help menu
             print_help(argv[0]);
             exit(EXIT_SUCCESS);
-        } else {
+        } else { // if an unknown argument is given, print help menu
             fprintf(stderr, "Unknown argument: %s\n", argv[i]);
             print_help(argv[0]);
             exit(EXIT_FAILURE);
@@ -114,24 +115,22 @@ int main(int argc, char **argv) {
         txt_filename++;
     }
 
+    // Check if file is a suported format
     if (!is_txt_file(txt_filename)) {
         printf("Error: The file given is not in the proper format. Only '.txt' files are excepted!\n");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
+    // Open the input file for reading
     FILE *txt_fp = fopen(txt_filepath, "rb");
     if (txt_fp == NULL) {
         printf("Error: could not open file '%s' for reading\n", txt_filename);
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
-    //char trimmed_filename[256];
-    //char trimmed_filename[9];
     char trimmed_filename[25]; // 20 characters max + 4 for extension + 1 for null terminator
-    //int counter;
 
     // Copy the original filename to the trimmed filename buffer
-    //strncpy(trimmed_filename, txt_filename, 8);
     strncpy(trimmed_filename, txt_filename, 24);
 
     if (is_txt_file(trimmed_filename)) {
@@ -139,27 +138,25 @@ int main(int argc, char **argv) {
         trimmed_filename[index_of_file_extension(trimmed_filename)] = '\0';
     } else {
         // If the filename does not end with '.txt', remove everything after the last '.' character
+        // This will occur when filename is longer than 20 characters
         trimmed_filename[20] = '\0';
     }
 
-    //printf("Original filename: %s\n", txt_filename);
-    //printf("Trimmed filename: %s\n", trimmed_filename);
-
+    // Print message if variable name is too long, more than 8 characters
     if ((strlen(trimmed_filename) > 8 && var_name == NULL) || (var_name != NULL && strlen(var_name) > 8)) {
         printf("Error: The maximum allowed length of a variable on the calculator is 8 characters and you have exceded that, so only the first 8 characters will be used instead!\n");
     }
 
+    // Calculate output file name with extension
     char output_filename[256];
-    //char output_filename[24]; // 19 characters max + 4 for extension + 1 for null terminator
     strncpy(output_filename, txt_filename, index_of_file_extension(txt_filename));
     strcpy(output_filename + index_of_file_extension(txt_filename), ".8xv");
 
-    //printf("Output filename: %s\n", output_filename);
-
+    // Open the output file for writing
     FILE *fp = fopen(output_filename, "wb+");
     if (fp == NULL) {
         printf("Error: could not open file for writing\n");
-        return 1;
+        exit(EXIT_FAILURE);
     }
 
     // signature offset 0x0 (0) thru 0xa (10)
@@ -194,14 +191,14 @@ int main(int argc, char **argv) {
     fputc(0x15, fp);
 
     // variable name offset 0x3c (60) thru 0x43 (67) padded with 0x00
-    if (var_name != NULL) {
+    if (var_name != NULL) { // if variable name is given, use that instead of trimmed filename
         fprintf(fp, "%.*s", 8, var_name);
         if (strlen(var_name) < 8) {
             for (unsigned long i = 0; i < 8 - strlen(var_name); i++) {
                 fputc(0x00, fp);
             }
         }
-    } else {
+    } else { // otherwise use trimmed filename
         fprintf(fp, "%.*s", 8, trimmed_filename);
         if (strlen(trimmed_filename) < 8) {
             for (unsigned long i = 0; i < 8 - strlen(trimmed_filename); i++) {
@@ -234,6 +231,7 @@ int main(int argc, char **argv) {
         fputc(before_filename[i], fp);
     }
 
+    // Print message if filename or note name is too long, more than 19 characters
     if (strlen(txt_filename) > 19 && note_name == NULL) {
         printf("Error: The filename given is too long to be stored as the name for the note. Only the first 19 characters will be used instead!\n");
     } else if (note_name != NULL && strlen(note_name) > 19) {
@@ -241,14 +239,14 @@ int main(int argc, char **argv) {
     }
 
     // filename offset 0x4f (79) thru 0x62 (98) padded with 0x0D
-    if (note_name != NULL) {
+    if (note_name != NULL) { // if note name is given, use that instead of filename
         fprintf(fp, "%.*s", 20, note_name);
         if (strlen(note_name) < 20) {
             for (unsigned long i = 0; i < 20 - strlen(note_name); i++) {
                 fputc(0x0D, fp);
             }
         }
-    } else {
+    } else { // otherwise use filename
         fprintf(fp, "%.*s", 20, txt_filename);
         if (strlen(txt_filename) < 20) {
             for (unsigned long i = 0; i < 20 - strlen(txt_filename); i++) {
@@ -266,33 +264,23 @@ int main(int argc, char **argv) {
         fputc(c, fp);
     }
 
-    fseek(fp, 0, SEEK_END);
-    if (ftell(fp) < 0x48) {
-        printf("Error: file is too small\n");
-        return 1;
-    }
-
+    // calculate the size of the variable data and update its value in the file
     int var_data_size = ftell(fp) - 0x48;
-    //printf("Variable data size: %d 0x%04X\n", var_data_size, var_data_size);
 
+    // update variable data size in the file at place 1
     fseek(fp, 0x39, SEEK_SET);
     fwrite(&var_data_size, 2, 1, fp);
-
+    // update variable data size in the file at place 2
     fseek(fp, 0x46, SEEK_SET);
     fwrite(&var_data_size, 2, 1, fp);
 
+    // update variable data size minus 0x2 in the file at place 3
     var_data_size -= 0x2;
     fseek(fp, 0x48, SEEK_SET);
     fwrite(&var_data_size, 2, 1, fp);
 
-    fseek(fp, 0, SEEK_END);
-    if (ftell(fp) < 0x37) {
-        printf("Error: file is too small\n");
-        return 1;
-    }
-
+    // save file data to calculate checksum
     int data_size = ftell(fp) - 0x37;
-    //printf("Data size: %d 0x%04X\n", data_size, data_size);
     unsigned char data[data_size];
 
     // file checksum offset 0x? (?) thru 0x?+2 (?+2)
@@ -308,20 +296,8 @@ int main(int argc, char **argv) {
 
     fseek(fp, 0, SEEK_END);
 
-    /*
-    // Print the data to the console
-    for (int i = 0; i < data_size; i++) {
-        printf("%02X ", data[i]);
-    }
-    printf("\n");
-
-    printf("sum: %i 0x%04X\n", sum, sum);
-    */
-
     // Get the lower 16 bits of the sum using bitwise operators
     unsigned short lower_16_bits = sum & 0xFFFF;
-
-    //printf("Lower 16 bits of sum: 0x%04X\n", lower_16_bits);
 
     // Set the file position indicator to the end of the file
     fseek(fp, 0, SEEK_END);
@@ -332,13 +308,12 @@ int main(int argc, char **argv) {
     // calculate the file size of and update its value in the file
     fseek(fp, 0, SEEK_END);
     long int file_size = ftell(fp);
-    //printf("File size: %ld 0x%x\n", file_size, file_size);
-    //printf("File size - 0x39: %ld 0x%x\n", file_size - 0x39, file_size - 0x39);
     file_size -= 0x39;
     fseek(fp, 0x35, SEEK_SET);
     fwrite(&file_size, 2, 1, fp);
     fseek(fp, 0, SEEK_END);
 
+    // Close the files
     fclose(fp);
     fclose(txt_fp);
     
