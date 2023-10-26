@@ -260,6 +260,9 @@ int main(int argc, char **argv) {
     // text content offset 0x63 (99) thru 0x? (?)
     int c;
     while ((c = fgetc(txt_fp)) != EOF) {
+        // calculator only accepts carriage returns, not newlines, so check and remove newlines
+        if (c == 0x0A) continue; // skip newlines
+        
         fputc(c, fp);
     }
 
