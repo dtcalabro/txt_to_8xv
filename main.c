@@ -6,6 +6,7 @@
 
 char *var_name = NULL;
 char *note_name = NULL;
+char *output_file = NULL;
 bool archived = true;
 
 int index_of_file_extension(char *filename) {
@@ -40,9 +41,10 @@ bool file_has_an_extension(char *filename) {
 }
 
 void print_help(char *program_name) {
-    printf("Usage: %s [-n note_name] [-v var_name] [-a] [-r] filename\n", program_name);
+    printf("Usage: %s [-o output_file] [-n note_name] [-v var_name] [-a] [-r] filename\n", program_name);
     printf("Options:\n");
-    printf("  -n note_name\tSet the note name\n");
+    printf("  -o output_file\tSpecify the output file\n");
+    printf("  -v var_name\tSet the variable name\n");
     printf("  -v var_name\tSet the variable name\n");
     printf("  -a\t\tStore in archive (default)\n");
     printf("  -r\t\tStore in RAM\n");
@@ -52,8 +54,11 @@ void print_help(char *program_name) {
 int main(int argc, char **argv) {
     // Parse the command line arguments
     int opt;
-    while ((opt = getopt(argc, argv, "n:v:arh")) != -1) {
+    while ((opt = getopt(argc, argv, "o:n:v:arh")) != -1) {
         switch (opt) {
+            case 'o': // if -o is given, save the output file name
+                output_file = optarg;
+                break;
             case 'n': // if -n is given, save the note name
                 note_name = optarg;
                 break;
@@ -85,7 +90,10 @@ int main(int argc, char **argv) {
 
     // Parse any remaining arguments
     for (int i = optind + 1; i < argc; i++) {
-        if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) { // if -n is given, save the note name
+        if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) { // if -o is given, save the output file name
+            output_file = argv[i + 1];
+            i++;
+        } else if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) { // if -n is given, save the note name
             note_name = argv[i + 1];
             i++;
         } else if (strcmp(argv[i], "-v") == 0 && i + 1 < argc) { // if -v is given, save the variable name
@@ -147,16 +155,26 @@ int main(int argc, char **argv) {
         printf("Error: The maximum allowed length of a variable on the calculator is 8 characters and you have exceded that, so only the first 8 characters will be used instead!\n");
     }
 
-    // Calculate output file name with extension
-    char output_filename[256];
-    strncpy(output_filename, txt_filename, index_of_file_extension(txt_filename));
-    strcpy(output_filename + index_of_file_extension(txt_filename), ".8xv");
+    FILE *fp;
+    if (output_file == NULL) { // If no output file is given, use the input file name
+        // Calculate output file name with extension
+        char output_filename[256];
+        strncpy(output_filename, txt_filename, index_of_file_extension(txt_filename));
+        strcpy(output_filename + index_of_file_extension(txt_filename), ".8xv");
 
-    // Open the output file for writing
-    FILE *fp = fopen(output_filename, "wb+");
-    if (fp == NULL) {
-        printf("Error: could not open file for writing\n");
-        exit(EXIT_FAILURE);
+        // Open the output file for writing
+        fp = fopen(output_filename, "wb+");
+        if (fp == NULL) {
+            printf("Error: could not open file for writing\n");
+            exit(EXIT_FAILURE);
+        }
+    } else { // If output file is given, use that
+        // Open the output file for writing
+        fp = fopen(output_file, "wb+");
+        if (fp == NULL) {
+            printf("Error: could not open file for writing\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     // signature offset 0x0 (0) thru 0xa (10)
@@ -164,7 +182,7 @@ int main(int argc, char **argv) {
     for (unsigned long i = 0; i < sizeof(sig); i++) {
         fputc(sig[i], fp);
     }
-
+    
     // comment offset 0xb (11) thru 0x34 (52)
     for (int i = 0; i < 42; i++) {
         fputc(0x00, fp);
@@ -263,6 +281,12 @@ int main(int argc, char **argv) {
 
         fputc(c, fp);
     }
+
+    /*
+    for (int i = 0; i < 0x10; i++) {
+        fputc(i, fp);
+    }
+    */
 
     // calculate the size of the variable data and update its value in the file
     int var_data_size = ftell(fp) - 0x48;
