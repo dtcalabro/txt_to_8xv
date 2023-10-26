@@ -262,14 +262,8 @@ int main(int argc, char **argv) {
     while ((c = fgetc(txt_fp)) != EOF) {
         // calculator only accepts carriage returns, not newlines, so check and remove newlines
         if (c == 0x0A) continue; // skip newlines
-        
-        fputc(c, fp);
-    }
 
-    // some weird end bytes offset 0x?+5 (?+5) thru 0x?+3 (?+3)
-    unsigned char end_bytes[] = {0xff, 0x0d, 0x00};
-    for (int i = 0; i < sizeof(end_bytes); i++) {
-        fputc(end_bytes[i], fp);
+        fputc(c, fp);
     }
 
     fseek(fp, 0, SEEK_END);
