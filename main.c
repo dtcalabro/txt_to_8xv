@@ -10,9 +10,12 @@ char *output_file = NULL;
 bool archived = true;
 
 int index_of_file_extension(char *filename) {
+    // This function returns the index of the last '.' character in the filename,
+    // signaling the start of the file extension
     int index = -1;
     for (int i = 0; i < (int)strlen(filename); i++) {
         if (filename[i] == '.') {
+            // If the current character is a '.', save its index
             index = i;
         }
     }
@@ -20,6 +23,7 @@ int index_of_file_extension(char *filename) {
 }
 
 bool is_txt_file(char *filename) {
+    // This function returns true if the file is a text file and false otherwise
     int index = index_of_file_extension(filename);
     if (index == -1) {
         return false;
@@ -33,6 +37,7 @@ bool is_txt_file(char *filename) {
 }
 
 bool file_has_an_extension(char *filename) {
+    // This function returns true if the file has an extension and false otherwise
     int index = index_of_file_extension(filename);
     if (index == -1) {
         return false;
@@ -44,11 +49,11 @@ void print_help(char *program_name) {
     printf("Usage: %s [-o output_file] [-n note_name] [-v var_name] [-a] [-r] filename\n", program_name);
     printf("Options:\n");
     printf("  -o output_file\tSpecify the output file\n");
-    printf("  -v var_name\tSet the variable name\n");
-    printf("  -v var_name\tSet the variable name\n");
-    printf("  -a\t\tStore in archive (default)\n");
-    printf("  -r\t\tStore in RAM\n");
-    printf("  -h\t\tPrint this help menu\n");
+    printf("  -v var_name\t\tSet the variable name\n");
+    printf("  -v var_name\t\tSet the variable name\n");
+    printf("  -a\t\t\tStore in archive (default)\n");
+    printf("  -r\t\t\tStore in RAM\n");
+    printf("  -h\t\t\tPrint this help menu\n");
 }
 
 int main(int argc, char **argv) {
@@ -182,7 +187,7 @@ int main(int argc, char **argv) {
     for (unsigned long i = 0; i < sizeof(sig); i++) {
         fputc(sig[i], fp);
     }
-    
+
     // comment offset 0xb (11) thru 0x34 (52)
     for (int i = 0; i < 42; i++) {
         fputc(0x00, fp);
