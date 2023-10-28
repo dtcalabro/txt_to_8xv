@@ -287,12 +287,6 @@ int main(int argc, char **argv) {
         fputc(c, fp);
     }
 
-    /*
-    for (int i = 0; i < 0x10; i++) {
-        fputc(i, fp);
-    }
-    */
-
     // calculate the size of the variable data and update its value in the file
     int var_data_size = ftell(fp) - 0x48;
 
@@ -309,6 +303,7 @@ int main(int argc, char **argv) {
     fwrite(&var_data_size, 2, 1, fp);
 
     // save file data to calculate checksum
+    fseek(fp, 0, SEEK_END);
     int data_size = ftell(fp) - 0x37;
     unsigned char data[data_size];
 
